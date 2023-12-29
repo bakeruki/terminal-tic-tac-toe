@@ -89,7 +89,6 @@ private:
 
   //start a player vs player game
   void PlayerVsPlayer(){
-    std::cout << "human v human selected\n";
     turn = 0;
     currentTurn = 0;
     resetBoard();
@@ -97,19 +96,21 @@ private:
     bool gameOver = false;
     while(!gameOver){
       std::cout << "Player " << (currentTurn == 0 ? "X" : "O") << "'s turn.\n";
+
       int move;
       if(currentTurn == 0){
         move = playerX.getMove(board);
       }else{
         move = playerO.getMove(board);
       }
+
       board[move] = currentTurn;
       currentTurn = currentTurn == 0 ? 1 : 0;
-      draw();
       turn++;
-      std::cout << "turn" << turn << "\n";
+
+      draw();
+
       int win = checkWin();
-      std::cout << "checkwin: " << checkWin() << "\n";
       if(win == 0){
         std::cout << "Player X wins!\n";
         gameOver = true;

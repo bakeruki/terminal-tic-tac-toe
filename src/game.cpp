@@ -29,7 +29,7 @@ private:
   bool running = true;
 
   //contains the menu
-  const std::string menu = "Menu:\n1. Human vs Human\n2. Exit\n";
+  const std::string menu = "Menu:\n1. Human vs Human\n2. Human vs AI\n3. AI vs AI\n4. AI trains AI\n5. Display AI1 hats\n6. Display AI2 hats\n7. Exit\n";
   //contains location combinations of wins
   const int winConditions[8][3] = {{0, 1, 2},
                                  {3, 4, 5},
@@ -124,6 +124,118 @@ private:
     }
   }
 
+  void PlayerVsAI(){
+    bool validResponse = false;
+    int playerTurn;
+    while(!validResponse){
+        std::cout << "Enter 0 to be X, 1 to be 0\n";
+        std::cin >> playerTurn;
+        if(playerTurn == 0 || playerTurn == 1){
+          validResponse = true;
+        }
+    }
+
+    turn = 0;
+    currentTurn = 0;
+    resetBoard();
+
+    bool gameOver = false;
+    while(!gameOver){
+      std::cout << "Player " << (currentTurn == 0 ? "X" : "O") << "'s turn.\n";
+
+      int move;
+      if(currentTurn == playerTurn){
+        move = playerX.getMove(board);
+      }else{
+        bool validMove = false;
+        while(!validMove){
+          move = ai1.getMove(turn);
+          if(board[move] == 2){
+            validMove = true;
+          }
+        }
+      }
+
+      board[move] = currentTurn;
+      currentTurn = currentTurn == 0 ? 1 : 0;
+      turn++;
+
+      draw();
+      std::cout << "AI plays " << move << ".\n";
+
+      int win = checkWin();
+      if(win == 0){
+        std::cout << "Player X wins!\n";
+        gameOver = true;
+      }else if(win == 1){
+        std::cout << "Player O wins!\n";
+        gameOver = true;
+      }else if(win == 2){
+        std::cout << "The game was a draw.\n";
+        gameOver = true;
+      }
+    }
+  }
+
+  void PlayerTrainsAI(){
+
+  }
+
+  void AITrainsAI(int *ai1wins, int *ai2wins, int *draws){
+    turn = 0;
+    currentTurn = 0;
+    resetBoard();
+    ai1.startTrainingGame();
+    ai2.startTrainingGame();
+
+    std::random_device rand;
+    std::mt19937 rng(rand());
+    std::uniform_int_distribution<std::mt19937::result_type> dist6(0, 1);
+    int ai1turn = dist6(rng);
+    int ai2turn = ai1turn == 1 ? 0 : 1;
+
+    bool gameOver = false;
+    while(!gameOver){
+      int move;
+      bool validMove = false;
+      if(currentTurn == ai1turn){
+        while(!validMove){
+          move = ai1.getMove(turn);
+          if(board[move] == 2){
+            validMove = true;
+          }
+        }
+      }else{
+        while(!validMove){
+          move = ai2.getMove(turn);
+          if(board[move] == 2){
+            validMove = true;
+          }
+        }
+      }
+
+      board[move] = currentTurn;
+      currentTurn = currentTurn == 0 ? 1 : 0;
+      turn++;
+
+      int win = checkWin();
+      if(win == 0){
+        ai1.winTrainingGame();
+        ai2.loseTrainingGame();
+        gameOver = true;
+        *ai1wins += 1;
+      }else if(win == 1){
+        ai2.winTrainingGame();
+        ai1.loseTrainingGame();
+        gameOver = true;
+        *ai2wins += 1;
+      }else if(win == 2){
+        gameOver = true;
+        *draws += 1;
+      }
+    }
+  }
+
 public:
   void start(){
     std::cout << "start\n";
@@ -136,7 +248,37 @@ public:
         case 1: //human vs human game
           PlayerVsPlayer();
           break;
-        case 2: //exit (stop program)
+        case 2:
+          PlayerVsAI();
+          break;
+        case 4: //ai vs ai training game
+          {
+          int *ai1winsptr = new int;
+          int *ai2winsptr = new int;
+          int *drawsptr = new int;
+          *ai1winsptr = 0;
+          *ai2winsptr = 0;
+          *drawsptr = 0;
+          int numGames = 50000;
+          std::cout << "Starting " << numGames << " training games between AI...\n";
+          for(int i = 0; i < numGames + 1; i++){
+            AITrainsAI(ai1winsptr, ai2winsptr, drawsptr);
+          }
+          std::cout << "AI 1 Won " << *ai1winsptr << " times. ";
+          std::cout << "AI 2 Won " << *ai2winsptr << " times. ";
+          std::cout << "There were " << *drawsptr << " draws.\n";
+          delete ai1winsptr;
+          delete ai2winsptr;
+          delete drawsptr;
+          break;
+          }
+        case 5:
+          ai1.printHats();
+          break;
+        case 6:
+          ai2.printHats();
+          break;
+        case 7: //exit (stop program)
           std::cout << "exiting\n";
           running = false;
           break;
